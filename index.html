@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LED Running Text Monitor</title>
+    <style>
+        body {
+            background-color: #111;
+            color: #eee;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        .led-container {
+            font-weight: bold;
+            overflow: hidden;
+            white-space: nowrap;
+            font-family: "Courier New", Courier, monospace;
+            letter-spacing: 5px;
+            animation: scroll 10s linear infinite;
+            color: red; /* Default color */
+            font-size: 2em; /* Default size */
+        }
+
+        @keyframes scroll {
+            from {
+                transform: translateX(100%);
+            }
+            to {
+                transform: translateX(-100%);
+            }
+        }
+
+        /* Notification Box */
+        .notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(34, 34, 34, 0.9);
+            color: #fc0707;
+            padding: 20px 40px;
+            border-top-left-radius: 25px;
+            border-top-right-radius: 25px;
+            display: none;
+            z-index: 10;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+            font-size: 1.2em;
+            text-align: center;
+            animation: fadeInOut 3s ease;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; }
+            20%, 80% { opacity: 1; }
+        }
+
+        /* Footer Menu Style */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            padding: 10px;
+            background-color: rgba(34, 34, 34, 0.9);
+            width: 100%;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            transition: transform 0.3s ease; /* Smooth transition */
+            transform: translateY(100%); /* Hidden off screen initially */
+        }
+
+        .controls.active {
+            transform: translateY(0); /* Show menu */
+        }
+
+        /* Toggle Button */
+        .toggle-button {
+            background-color: #444;
+            color: white;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 1.2em;
+            border: none;
+            position: absolute; /* Fixed position */
+            bottom: 10px; /* Distance from the bottom */
+            left: 50%;
+            transform: translateX(-50%); /* Center the button */
+            z-index: 2000; /* Above other elements */
+        }
+
+        /* Input and Select Styles */
+        label, input, select, button {
+            color: white;
+            background-color: #444;
+            border: none;
+            padding: 8px;
+            font-size: 1em;
+            border-radius: 5px;
+            width: 100%;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 600px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .controls button, .controls select, .controls input {
+                width: 100%; /* Full width for smaller screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="led-container" id="ledText">
+        ⚫ LED Running Text ⚫ Customize me with the settings below! ⚫
+    </div>
+
+    <div class="notification" id="notification">
+        A button has been pressed!
+    </div>
+
+    <div class="controls" id="controls">
+        <div>
+            <label for="color">Color:</label>
+            <select id="color" onchange="updateSettings()">
+                <option value="red">Red</option>
+                <option value="green">Green</option>
+                <option value="blue">Blue</option>
+                <option value="yellow">Yellow</option>
+                <option value="white">White</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="speed">Speed:</label>
+            <select id="speed" onchange="updateSettings()">
+                <option value="5s">Fast</option>
+                <option value="10s" selected>Normal</option>
+                <option value="20s">Slow</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="size">Text Size:</label>
+            <select id="size" onchange="updateSettings()">
+                <option value="1em">Small</option>
+                <option value="2em">Medium</option>
+                <option value="3em">Large</option>
+                <option value="4em">Extra Large</option>
+                <option value="5em">Huge</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="text">Running Text:</label>
+            <input type="text" id="text" placeholder="Enter your text here" oninput="updateText()" />
+        </div>
+
+        <div>
+            <label for="notificationText">Notification Message:</label>
+            <input type="text" id="notificationText" placeholder="Enter notification message" />
+        </div>
+
+        <div>
+            <label for="notificationColor">Notification Color:</label>
+            <select id="notificationColor" onchange="updateNotificationColor()">
+                <option value="rgba(34, 34, 34, 0.9)">Default</option>
+                <option value="red">Red</option>
+                <option value="green">Green</option>
+                <option value="blue">Blue</option>
+                <option value="yellow">Yellow</option>
+                <option value="purple">Purple</option>
+                <option value="orange">Orange</option>
+            </select>
+        </div>
+
+        <div>
+            <button onclick="toggleAnimation()" id="stopButton">Stop</button>
+        </div>
+    </div>
+
+    <button style="color: #fc0707;" class="toggle-button" onclick="toggleMenu()">⚙️Nofri_Flory</button>
+
+    <script>
+        let isRunning = true; // Track whether the animation is running
+        let menuVisible = false; // Track the visibility of the menu
+
+        function toggleMenu() {
+            menuVisible = !menuVisible;
+            const controls = document.getElementById("controls");
+            controls.classList.toggle("active", menuVisible); // Toggle active class
+            controls.style.transform = menuVisible ? "translateY(0)" : "translateY(100%)"; // Move the menu up or down
+        }
+
+        function hideNotification() {
+            document.getElementById("notification").style.display = "none";
+        }
+
+        function updateSettings() {
+            const color = document.getElementById("color").value;
+            const speed = document.getElementById("speed").value;
+            const size = document.getElementById("size").value;
+
+            const ledText = document.getElementById("ledText");
+            ledText.style.color = color;
+            ledText.style.animationDuration = speed;
+            ledText.style.fontSize = size;
+        }
+
+        function updateText() {
+            const text = document.getElementById("text").value;
+            document.getElementById("ledText").textContent = text;
+        }
+
+        function updateNotificationColor() {
+            const notificationColor = document.getElementById("notificationColor").value;
+            document.getElementById("notification").style.backgroundColor = notificationColor;
+        }
+
+        function toggleAnimation() {
+            isRunning = !isRunning;
+            const ledText = document.getElementById("ledText");
+            ledText.style.animationPlayState = isRunning ? "running" : "paused";
+            document.getElementById("stopButton").textContent = isRunning ? "Stop" : "Resume";
+        }
+
+        function showNotification() {
+            const notification = document.getElementById("notification");
+            const notificationText = document.getElementById("notificationText").value || "A button has been pressed!";
+            notification.textContent = notificationText;
+            notification.style.display = "block";
+            setTimeout(hideNotification, 3000);
+        }
+
+        // Add event listener to close menu when clicking outside of controls
+        document.addEventListener('click', (event) => {
+            const controls = document.getElementById("controls");
+            const toggleButton = document.querySelector(".toggle-button");
+
+            // If the menu is visible and clicked outside of it or toggle button, hide the menu
+            if (menuVisible && !event.target.closest('.controls') && event.target !== toggleButton) {
+                toggleMenu();
+            }
+
+            // Show notification when clicking anywhere on the body, but not on controls
+            if (!menuVisible && event.target !== toggleButton) {
+                showNotification();
+            }
+        });
+    </script>
+</body>
+</html>
